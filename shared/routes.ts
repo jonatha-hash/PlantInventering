@@ -76,7 +76,9 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/hyggen' as const,
-      input: insertHyggeSchema,
+      input: insertHyggeSchema.extend({
+        initialRadieM: z.coerce.number().optional(),
+      }),
       responses: {
         201: hyggeResponseSchema,
         400: errorSchemas.validation,

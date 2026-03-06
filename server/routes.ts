@@ -34,8 +34,9 @@ export async function registerRoutes(
       const schema = api.hyggen.create.input.extend({
         hektar: z.coerce.number(),
         rekommenderadeProvytor: z.coerce.number(),
+        initialRadieM: z.coerce.number().optional(),
       });
-      const input = schema.parse(req.body);
+      const { initialRadieM, ...input } = schema.parse(req.body);
       const result = await storage.createHygge(input);
       res.status(201).json(result);
     } catch (err) {

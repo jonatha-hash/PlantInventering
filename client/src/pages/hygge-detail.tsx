@@ -3,12 +3,14 @@ import { useRoute, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useHygge, useCreateProvyta } from "@/hooks/use-api";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
-import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin } from "lucide-react";
+import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin, FileText, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProvytaSchema } from "@shared/schema";
 import { z } from "zod";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const formSchema = z.object({
   radieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie"),
@@ -63,6 +65,40 @@ export default function HyggeDetail() {
     });
   };
 
+  const handleExportPDF = () => {
+    if (!hygge) return;
+    
+    const doc = new jsPDF();
+    const title = `Fältinventering: ${hygge.namn}`;
+    
+    doc.setFontSize(20);
+    doc.text(title, 14, 22);
+    
+    doc.setFontSize(12);
+    doc.text(`Datum: ${new Date().toLocaleDateString('sv-SE')}`, 14, 32);
+    doc.text(`Areal: ${hygge.hektar} ha`, 14, 38);
+    doc.text(`Antal provytor: ${hygge.provytor.length} / ${hygge.rekommenderadeProvytor}`, 14, 44);
+    if (hygge.anteckning) {
+      doc.text(`Anteckning objekt: ${hygge.anteckning}`, 14, 50);
+    }
+    
+    // Add Plot Table
+    const tableData = hygge.provytor.map((p, i) => {
+      const treeCount = p.tradposter.reduce((sum, t) => sum + t.antal, 0);
+      const damageCount = p.tradposter.reduce((sum, t) => sum + t.skadade, 0);
+      const species = p.tradposter.map(t => `${t.art}: ${t.antal}st`).join(', ');
+      return [i + 1, `${p.radieM}m`, treeCount, damageCount, species, p.anteckning || '-'];
+    });
+    
+    autoTable(doc, {
+      startY: hygge.anteckning ? 56 : 50,
+      head: [['Nr', 'Radie', 'Antal träd', 'Skadade', 'Arter', 'Anteckning']],
+      body: tableData,
+    });
+    
+    doc.save(`${hygge.namn}_inventering.pdf`);
+  };
+
   return (
     <Layout title={hygge.namn} backTo="/">
       
@@ -84,6 +120,13 @@ export default function HyggeDetail() {
           </div>
         </div>
 
+        {hygge.anteckning && (
+          <div className="relative z-10 flex items-start gap-2 text-primary-foreground/90 bg-black/10 p-3 rounded-xl mb-4 text-sm italic">
+            <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p>{hygge.anteckning}</p>
+          </div>
+        )}
+
         {/* Progress bar */}
         <div className="h-2 w-full bg-black/20 rounded-full overflow-hidden mt-4">
           <div 
@@ -93,7 +136,7 @@ export default function HyggeDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-8">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <Button 
           variant="secondary"
           className="flex-col h-auto py-4 rounded-2xl gap-2 text-primary"
@@ -113,6 +156,17 @@ export default function HyggeDetail() {
         </Button>
       </div>
 
+      <div className="mb-8">
+        <Button 
+          variant="outline" 
+          className="w-full rounded-2xl h-12 border-primary/20 text-primary hover:bg-primary/5"
+          onClick={handleExportPDF}
+        >
+          <Download className="w-5 h-5 mr-2" />
+          Exportera till PDF
+        </Button>
+      </div>
+
       <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -127,16 +181,22 @@ export default function HyggeDetail() {
                   <h3 className="font-display font-bold text-lg text-primary">Skapa ny Provyta</h3>
                 </div>
 
-                <div>
-                  <Label htmlFor="radieM">Cirkelradie (meter)</Label>
-                  <Input 
-                    id="radieM" 
-                    type="number" 
-                    step="0.01" 
-                    inputMode="decimal"
-                    {...register("radieM")} 
-                  />
-                  {errors.radieM && <p className="text-destructive text-sm mt-1">{errors.radieM.message}</p>}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="radieM">Cirkelradie (m)</Label>
+                    <Input 
+                      id="radieM" 
+                      type="number" 
+                      step="0.01" 
+                      inputMode="decimal"
+                      {...register("radieM")} 
+                    />
+                    {errors.radieM && <p className="text-destructive text-sm mt-1">{errors.radieM.message}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="anteckning">Anteckning yta</Label>
+                    <Input id="anteckning" placeholder="Valfritt" {...register("anteckning")} />
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">

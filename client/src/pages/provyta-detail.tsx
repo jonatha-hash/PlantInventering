@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Leaf, AlertCircle, Plus, Loader2 } from "lucide-react";
 import { clsx } from "clsx";
 
-const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok", "Övrigt löv"];
+const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok"];
 
 const formSchema = z.object({
   art: z.string().min(1, "Välj eller skriv art"),

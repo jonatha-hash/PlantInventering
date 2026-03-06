@@ -14,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 const formSchema = insertHyggeSchema.extend({
   hektar: z.coerce.number().min(0.1, "Måste vara minst 0.1 ha"),
   rekommenderadeProvytor: z.coerce.number().min(1, "Minst 1 provyta"),
+  initialRadieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie").optional().default(1.78),
+  anteckning: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -24,21 +26,28 @@ export default function Home() {
   const createMutation = useCreateHygge();
   const [isCreating, setIsCreating] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { namn: "", hektar: 0, rekommenderadeProvytor: 0 }
+    defaultValues: { namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 1.78, anteckning: "" }
   });
 
   const hektar = watch("hektar");
+  const radieM = watch("initialRadieM") || 1.78;
 
-  // Automatically suggest plots based on hectares (e.g., 10 plots per hectare roughly, or whatever rule)
-  const calculateRecommended = (ha: number) => Math.max(5, Math.ceil(ha * 4));
+  // Automatically suggest plots based on hectares and radius
+  const calculateRecommended = (ha: number, radie: number) => {
+    if (!ha || !radie) return 5;
+    // Standard formula for forestry: target is often a certain percentage or fixed count per ha
+    // We'll use a slightly more dynamic formula here
+    const plotsPerHa = Math.max(5, Math.ceil(ha * (10 / radie)));
+    return plotsPerHa;
+  };
 
   const onSubmit = (data: FormValues) => {
     createMutation.mutate(data, {
       onSuccess: (newHygge) => {
         setIsCreating(false);
-        reset({ namn: "", hektar: 0, rekommenderadeProvytor: 0 });
+        reset({ namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 1.78, anteckning: "" });
         setLocation(`/hygge/${newHygge.id}`);
       },
       onError: (error) => {
@@ -110,6 +119,30 @@ export default function Home() {
                         pattern="[0-9]*"
                         {...register("rekommenderadeProvytor")} 
                       />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="initialRadieM">Standardradie (m)</Label>
+                      <Input 
+                        id="initialRadieM" 
+                        type="number" 
+                        step="0.01" 
+                        inputMode="decimal"
+                        {...register("initialRadieM")}
+                        onChange={(e) => {
+                          register("initialRadieM").onChange(e);
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val > 0) {
+                            setValue("rekommenderadeProvytor", calculateRecommended(hektar, val));
+                          }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="anteckning">Anteckning objekt</Label>
+                      <Input id="anteckning" placeholder="T.ex. svår terräng" {...register("anteckning")} />
                     </div>
                   </div>
 

@@ -10,6 +10,7 @@ export const hyggen = pgTable("hyggen", {
   namn: text("namn").notNull(),
   hektar: real("hektar").notNull(),
   rekommenderadeProvytor: integer("rekommenderade_provytor").notNull(),
+  anteckning: text("anteckning"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -66,8 +67,8 @@ export type Provyta = typeof provytor.$inferSelect;
 export type Tradpost = typeof tradposter.$inferSelect;
 
 // Request Types
-export type CreateHyggeRequest = z.infer<typeof insertHyggeSchema>;
-export type UpdateHyggeRequest = Partial<CreateHyggeRequest>;
+export type CreateHyggeRequest = z.infer<typeof insertHyggeSchema> & { initialRadieM?: number };
+export type UpdateHyggeRequest = Partial<z.infer<typeof insertHyggeSchema>>;
 
 export type CreateProvytaRequest = Omit<z.infer<typeof insertProvytaSchema>, "hyggeId">;
 export type UpdateProvytaRequest = Partial<z.infer<typeof insertProvytaSchema>>;
