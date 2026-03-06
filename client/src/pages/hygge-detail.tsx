@@ -3,7 +3,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useHygge, useCreateProvyta } from "@/hooks/use-api";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
-import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
+import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
