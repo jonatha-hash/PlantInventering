@@ -95,12 +95,13 @@ export default function HyggeDetail() {
 
       <div className="grid grid-cols-2 gap-3 mb-8">
         <Button 
-          variant="secondary" 
+          variant="secondary"
           className="flex-col h-auto py-4 rounded-2xl gap-2 text-primary"
-          onClick={() => setLocation(`/hygge/${id}/stats`)}
+          onClick={handleDuplicateLast}
+          disabled={createMutation.isPending || provytorCount === 0}
         >
-          <BarChart3 className="w-7 h-7" />
-          <span>Statistik</span>
+          {createMutation.isPending ? <Loader2 className="w-7 h-7 animate-spin" /> : <Copy className="w-7 h-7" />}
+          <span>Kopiera senaste</span>
         </Button>
         <Button 
           variant="secondary"
@@ -123,20 +124,7 @@ export default function HyggeDetail() {
             <Card className="border-primary/20 bg-primary/5">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-display font-bold text-lg text-primary">Lägg till Provyta</h3>
-                  {provytorCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const last = hygge.provytor[hygge.provytor.length - 1];
-                        setValue("radieM", last.radieM);
-                      }}
-                      className="text-xs font-semibold text-primary/80 flex items-center bg-primary/10 px-3 py-1.5 rounded-full"
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Kopiera radie ({hygge.provytor[hygge.provytor.length - 1].radieM}m)
-                    </button>
-                  )}
+                  <h3 className="font-display font-bold text-lg text-primary">Skapa ny Provyta</h3>
                 </div>
 
                 <div>
@@ -167,18 +155,15 @@ export default function HyggeDetail() {
 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-display font-bold text-foreground">Inlagda Ytor</h2>
-        {provytorCount > 0 && !isAdding && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-primary hover:bg-primary/10 h-9"
-            onClick={handleDuplicateLast}
-            disabled={createMutation.isPending}
-          >
-            {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4 mr-2" />}
-            Snabbkopiera senaste
-          </Button>
-        )}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary hover:bg-primary/10 h-9"
+          onClick={() => setLocation(`/hygge/${id}/stats`)}
+        >
+          <BarChart3 className="w-4 h-4 mr-2" />
+          Se Statistik
+        </Button>
       </div>
 
       {provytorCount === 0 ? (

@@ -9,10 +9,10 @@ import { z } from "zod";
 import { Leaf, AlertCircle, Plus, Loader2 } from "lucide-react";
 import { clsx } from "clsx";
 
-const TRAD_ARTER = ["Tall", "Gran", "Björk", "Contorta", "Lärk", "Bok", "Ek", "Övrigt löv"];
+const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok", "Övrigt löv"];
 
 const formSchema = z.object({
-  art: z.string().min(1, "Välj art"),
+  art: z.string().min(1, "Välj eller skriv art"),
   antal: z.coerce.number().min(1, "Minst 1"),
   skadade: z.coerce.number().min(0, "Kan ej vara negativt"),
 }).refine(data => data.skadade <= data.antal, {
@@ -35,7 +35,7 @@ export default function ProvytaDetail() {
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { antal: 1, skadade: 0 }
+    defaultValues: { art: "", antal: 1, skadade: 0 }
   });
 
   const selectedArt = watch("art");
@@ -74,9 +74,15 @@ export default function ProvytaDetail() {
       <Card className="mb-8 border-2 border-primary/20 shadow-elevated">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
-            <Label>Trädart</Label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2">
-              {TRAD_ARTER.slice(0, 6).map(art => (
+            <Label htmlFor="art-input">Trädart</Label>
+            <Input 
+              id="art-input"
+              placeholder="Välj nedan eller skriv här..."
+              className="mb-3"
+              {...register("art")}
+            />
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {TRAD_ARTER.map(art => (
                 <button
                   key={art}
                   type="button"

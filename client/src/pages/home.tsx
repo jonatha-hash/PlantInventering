@@ -38,8 +38,11 @@ export default function Home() {
     createMutation.mutate(data, {
       onSuccess: (newHygge) => {
         setIsCreating(false);
-        reset();
+        reset({ namn: "", hektar: 0, rekommenderadeProvytor: 0 });
         setLocation(`/hygge/${newHygge.id}`);
+      },
+      onError: (error) => {
+        console.error("Failed to create hygge:", error);
       }
     });
   };
