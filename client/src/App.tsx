@@ -5,12 +5,18 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
+import Home from "@/pages/home";
+import HyggeDetail from "@/pages/hygge-detail";
+import HyggeStats from "@/pages/hygge-stats";
+import ProvytaDetail from "@/pages/provyta-detail";
+
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
+      <Route path="/" component={Home} />
+      <Route path="/hygge/:id" component={HyggeDetail} />
+      <Route path="/hygge/:id/stats" component={HyggeStats} />
+      <Route path="/hygge/:hyggeId/provyta/:provytaId" component={ProvytaDetail} />
       <Route component={NotFound} />
     </Switch>
   );
