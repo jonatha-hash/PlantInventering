@@ -1,0 +1,40 @@
+Du är en produktiv utvecklingsassistent. Bygg en mobilvänlig webapp för fältinventering av skogsföryngringar enligt följande specifikation.
+
+1) Översikt
+- Appens syfte: dokumentera hyggen och provytor, samla trädartsdata och skador, och generera nyckeltal (plantor/ha, skadade/ha, medel, standardavvikelse, 95% konfidensintervall).
+- Målgrupp: fältpersonal som behöver snabb inmatning offline.
+
+2) Funktioner
+- Hygge: skapa/ändra/radera; fält: namn, hektar (decimal), rekommenderade provytor (int).
+- Provytor: skapa inom hygge; fält: radie_m (float), position (lat, lon valfritt), anteckning.
+- Trädpost per provyta: art (autocomplete), antal (int), skadade (int).
+- Statistik: summeringar per hygge och per art; medel, s, 95% CI; plantor/ha och skadade/ha.
+- Offline-läge: lokal cache + synk i bakgrunden.
+- Snabbinmatning: duplicera föregående provyta; fokus på numerisk inmatning och minimalt textbehov.
+
+3) Databas och API
+- Använd Replit DB eller enkel REST-API med endpoints: `POST /hyggen`, `GET /hyggen/{id}`, `POST /hyggen/{id}/provytor`, `PUT /provytor/{id}`, `GET /hyggen/{id}/stats`.
+- Returnera JSON enligt datamodellen i specifikationen.
+
+4) UI/UX
+- Mobil-first, stora touchmål, minimal text.
+- Provytalista: visa summering per provyta och snabbknapp för "lägg till träd".
+- Inmatningsvy: en rad per trädslag med art-autocomplete och två numeriska fält (antal, skadade).
+- Bekräftelse via svep eller stor "Spara"-knapp.
+- Minimera tryck: automatisk fokus på nästa fält, numeriskt tangentbord, möjlighet att duplicera föregående provyta.
+
+5) Statistik och formler
+- Beräkna provytans area: A = π r^2; omvandla till ha: A_ha = A/10000.
+- Medel och standardavvikelse enligt standardformler; 95% CI med t-fördelning.
+- Plantor/ha = (medel plantor per provyta / provyta_area_ha).
+- Skadade/ha = (medel skadade per provyta / provyta_area_ha).
+
+6) Acceptanskriterier och test
+- Implementera automatiska enhetstester som verifierar beräkningar med exempeldata (se testdataset i kravspec).
+- UI-test: snabbinmatning ska kunna lägga in 10 provytor på under 3 minuter i mobilvy.
+
+7) Leverans
+- Generera en minimal fungerande version (MVP) med: React + Tailwind (frontend) och enkel Node/Express backend som använder Replit DB; alternativt ge instruktioner för Python/Flask.
+- Inkludera README med körinstruktioner, API-spec och testdata.
+
+Bygg stegvis: 1) datamodell + API, 2) grundläggande UI för hyggen och provytor, 3) snabbinmatningsflöde (utan snabbknappar för antal), 4) statistikmodul och tester, 5) offline-synk. Kommentera varje steg och leverera kodexempel och testdata.
