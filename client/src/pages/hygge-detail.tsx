@@ -94,8 +94,10 @@ export default function HyggeDetail() {
     doc.text(`Antal provytor: ${hygge.provytor.length} / ${hygge.rekommenderadeProvytor}`, 14, yPos);
     yPos += 6;
     if (hygge.anteckning) {
-      doc.text(`Anteckning objekt: ${hygge.anteckning}`, 14, yPos);
-      yPos += 6;
+      const maxWidth = 180; // Max width for wrapped text
+      const splitText = doc.splitTextToSize(`Anteckning objekt: ${hygge.anteckning}`, maxWidth);
+      doc.text(splitText, 14, yPos);
+      yPos += splitText.length * 5 + 1;
     }
     
     // Add Plot Table

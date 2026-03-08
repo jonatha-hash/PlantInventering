@@ -177,14 +177,19 @@ export default function ProvytaDetail() {
 
             <div>
               <Label htmlFor="skadade" className="text-accent">Därav skadade</Label>
-              <Input 
-                id="skadade" 
-                type="number" 
-                inputMode="numeric" 
-                pattern="[0-9]*"
-                className="text-2xl font-bold text-center h-16 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
-                {...register("skadade")} 
-              />
+              <div className="relative">
+                <Input 
+                  id="skadade" 
+                  type="number" 
+                  inputMode="numeric" 
+                  pattern="[0-9]*"
+                  className="text-2xl font-bold text-center h-16 pr-12 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
+                  {...register("skadade")} 
+                />
+                <div className="absolute right-2 top-2 bottom-2 flex flex-col gap-1 w-10">
+                  <button type="button" onClick={() => setValue("skadade", Math.min(Number(watch("skadade")) + 1, Number(watch("antal"))))} className="flex-1 bg-secondary rounded-md flex items-center justify-center hover:bg-secondary/80 active:bg-accent active:text-white transition-colors"><Plus className="w-4 h-4"/></button>
+                </div>
+              </div>
               {errors.skadade && <p className="text-destructive text-sm mt-1">{errors.skadade.message}</p>}
             </div>
           </div>
