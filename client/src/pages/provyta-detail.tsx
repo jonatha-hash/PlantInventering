@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { Layout } from "@/components/layout";
 import { useHygge, useCreateTradpost, useUpdateProvyta } from "@/hooks/use-api";
@@ -35,7 +35,13 @@ export default function ProvytaDetail() {
   const provytaIndex = hygge ? hygge.provytor.findIndex(p => p.id === provytaId) + 1 : 0;
   
   const [editingComment, setEditingComment] = useState(false);
-  const [commentValue, setCommentValue] = useState(provyta?.anteckning || "");
+  const [commentValue, setCommentValue] = useState<string>("");
+
+  useEffect(() => {
+    if (provyta && !editingComment) {
+      setCommentValue(provyta.anteckning || "");
+    }
+  }, [provyta?.id, editingComment]);
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -49,11 +55,6 @@ export default function ProvytaDetail() {
   if (!provyta) return <Layout backTo={`/hygge/${hyggeId}`}><div className="p-8 text-center text-muted-foreground">Provyta hittades inte</div></Layout>;
 
   const areaM2 = Math.PI * Math.pow(provyta.radieM, 2);
-  
-  // Update comment value when provyta changes
-  if (!editingComment && provyta?.anteckning !== commentValue) {
-    setCommentValue(provyta?.anteckning || "");
-  }
 
   const onSubmit = (data: FormValues) => {
     createMutation.mutate(data, {
