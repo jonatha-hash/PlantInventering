@@ -3,7 +3,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useHygge, useCreateProvyta } from "@/hooks/use-api";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
-import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin, FileText, Download } from "lucide-react";
+import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin, FileText, Download, Trash2, Edit2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import { insertProvytaSchema } from "@shared/schema";
 import { z } from "zod";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useDeleteProvyta, useUpdateProvyta, useHyggeStats, useDeleteHygge } from "@/hooks/use-api";
 
 const formSchema = z.object({
   radieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie"),
@@ -25,9 +26,16 @@ export default function HyggeDetail() {
   const [, setLocation] = useLocation();
   
   const { data: hygge, isLoading } = useHygge(id);
+  const { data: stats } = useHyggeStats(id);
   const createMutation = useCreateProvyta(id);
+  const deleteMutation = useDeleteProvyta(id);
+  const deleteHyggeMutation = useDeleteHygge();
+  const updateHyggeMutation = useUpdateProvyta(id);
   
   const [isAdding, setIsAdding] = useState(false);
+  const [editingHyggeId, setEditingHyggeId] = useState<number | null>(null);
+  const [deleteConfirmProvyta, setDeleteConfirmProvyta] = useState<number | null>(null);
+  const [editingProvytaId, setEditingProvytaId] = useState<number | null>(null);
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,7 +74,7 @@ export default function HyggeDetail() {
   };
 
   const handleExportPDF = () => {
-    if (!hygge) return;
+    if (!hygge || !stats) return;
     
     const doc = new jsPDF();
     const title = `Fältinventering: ${hygge.namn}`;
@@ -74,12 +82,17 @@ export default function HyggeDetail() {
     doc.setFontSize(20);
     doc.text(title, 14, 22);
     
-    doc.setFontSize(12);
-    doc.text(`Datum: ${new Date().toLocaleDateString('sv-SE')}`, 14, 32);
-    doc.text(`Areal: ${hygge.hektar} ha`, 14, 38);
-    doc.text(`Antal provytor: ${hygge.provytor.length} / ${hygge.rekommenderadeProvytor}`, 14, 44);
+    doc.setFontSize(11);
+    let yPos = 32;
+    doc.text(`Datum: ${new Date().toLocaleDateString('sv-SE')}`, 14, yPos);
+    yPos += 6;
+    doc.text(`Areal: ${hygge.hektar} ha`, 14, yPos);
+    yPos += 6;
+    doc.text(`Antal provytor: ${hygge.provytor.length} / ${hygge.rekommenderadeProvytor}`, 14, yPos);
+    yPos += 6;
     if (hygge.anteckning) {
-      doc.text(`Anteckning objekt: ${hygge.anteckning}`, 14, 50);
+      doc.text(`Anteckning objekt: ${hygge.anteckning}`, 14, yPos);
+      yPos += 6;
     }
     
     // Add Plot Table
@@ -91,10 +104,53 @@ export default function HyggeDetail() {
     });
     
     autoTable(doc, {
-      startY: hygge.anteckning ? 56 : 50,
+      startY: yPos + 2,
       head: [['Nr', 'Radie', 'Antal träd', 'Skadade', 'Arter', 'Anteckning']],
       body: tableData,
     });
+    
+    // Statistics section
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+    
+    doc.setFontSize(14);
+    doc.text('Statistik', 14, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    const statsData = [
+      ['Plantor/ha', Math.round(stats.plantorPerHa).toString()],
+      ['Skadade/ha', Math.round(stats.skadadePerHa).toString()],
+      ['Medel plantor/provyta', stats.medelPlantorPerProvyta.toFixed(1)],
+      ['Standardavvikelse', stats.sPlantor.toFixed(2)],
+      ['95% Konfidensintervall', `±${Math.round(stats.ci95Plantor)}`],
+    ];
+    
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Mått', 'Värde']],
+      body: statsData,
+    });
+    
+    if (stats.arter.length > 0) {
+      yPos = (doc as any).lastAutoTable.finalY + 10;
+      
+      doc.setFontSize(14);
+      doc.text('Arter', 14, yPos);
+      yPos += 8;
+      
+      const speciesData = stats.arter.map(art => [
+        art.art,
+        art.totalAntal.toString(),
+        Math.round(art.plantorPerHa).toString(),
+        art.medelPerProvyta.toFixed(1)
+      ]);
+      
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Art', 'Totalt', 'St/ha', 'Medel/yta']],
+        body: speciesData,
+      });
+    }
     
     doc.save(`${hygge.namn}_inventering.pdf`);
   };
@@ -240,39 +296,86 @@ export default function HyggeDetail() {
             const damageCount = yta.tradposter.reduce((sum, t) => sum + t.skadade, 0);
             
             return (
-              <Link key={yta.id} href={`/hygge/${id}/provyta/${yta.id}`} className="block">
-                <Card className="p-4 flex items-center group">
-                  <div className="w-12 h-12 rounded-full bg-secondary flex flex-col items-center justify-center mr-4 text-primary font-display font-bold leading-none">
-                    <span className="text-xs opacity-70">Nr</span>
-                    <span>{actualIndex}</span>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">r={yta.radieM}m</span>
-                      {treeCount > 0 ? (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md font-bold">
-                          {treeCount} träd
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-md font-bold">
-                          Tom yta
-                        </span>
-                      )}
+              <div key={yta.id}>
+                {deleteConfirmProvyta === yta.id ? (
+                  <Card className="p-4 bg-destructive/10 border-destructive/30">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertCircle className="w-5 h-5 text-destructive" />
+                      <span className="font-semibold text-destructive">Radera provyta nr {actualIndex}?</span>
                     </div>
-                    {damageCount > 0 && (
-                      <div className="flex items-center text-xs text-accent font-medium">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        {damageCount} skadade
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => setDeleteConfirmProvyta(null)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        Avbryt
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        className="flex-1"
+                        onClick={() => {
+                          deleteMutation.mutate(yta.id, {
+                            onSuccess: () => setDeleteConfirmProvyta(null),
+                          });
+                        }}
+                        disabled={deleteMutation.isPending}
+                      >
+                        {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Radera"}
+                      </Button>
+                    </div>
+                  </Card>
+                ) : (
+                  <Link href={`/hygge/${id}/provyta/${yta.id}`} className="block">
+                    <Card className="p-4 flex items-center group relative">
+                      <div className="w-12 h-12 rounded-full bg-secondary flex flex-col items-center justify-center mr-4 text-primary font-display font-bold leading-none">
+                        <span className="text-xs opacity-70">Nr</span>
+                        <span>{actualIndex}</span>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className="text-muted-foreground">
-                    <ChevronRight className="w-6 h-6" />
-                  </div>
-                </Card>
-              </Link>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">r={yta.radieM}m</span>
+                          {treeCount > 0 ? (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md font-bold">
+                              {treeCount} träd
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-md font-bold">
+                              Tom yta
+                            </span>
+                          )}
+                        </div>
+                        {yta.anteckning && (
+                          <p className="text-xs text-muted-foreground italic mt-1">{yta.anteckning}</p>
+                        )}
+                        {damageCount > 0 && (
+                          <div className="flex items-center text-xs text-accent font-medium mt-1">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {damageCount} skadade
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10 ml-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDeleteConfirmProvyta(yta.id);
+                        }}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                      <div className="text-muted-foreground ml-2">
+                        <ChevronRight className="w-6 h-6" />
+                      </div>
+                    </Card>
+                  </Link>
+                )}
+              </div>
             )
           })}
         </div>

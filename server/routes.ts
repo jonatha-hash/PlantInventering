@@ -50,6 +50,45 @@ export async function registerRoutes(
     }
   });
 
+  app.put(api.hyggen.update.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const schema = api.hyggen.update.input.extend({
+        hektar: z.coerce.number().optional(),
+        rekommenderadeProvytor: z.coerce.number().optional(),
+      });
+      const input = schema.parse(req.body);
+      const result = await storage.updateHygge(id, input);
+      if (!result) return res.status(404).json({ message: "Hygge not found" });
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.hyggen.delete.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const hygge = await storage.getHygge(id);
+      if (!hygge) return res.status(404).json({ message: "Hygge not found" });
+      
+      await storage.deleteHygge(id);
+      res.status(204).send();
+    } catch (err) {
+      throw err;
+    }
+  });
+
   // Calculate statistics for a Hygge
   app.get(api.hyggen.stats.path, async (req, res) => {
     const id = parseInt(req.params.id);
@@ -202,6 +241,18 @@ export async function registerRoutes(
           field: err.errors[0].path.join('.'),
         });
       }
+      throw err;
+    }
+  });
+
+  app.delete(api.provytor.delete.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      
+      await storage.deleteProvyta(id);
+      res.status(204).send();
+    } catch (err) {
       throw err;
     }
   });

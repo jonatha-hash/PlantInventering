@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { TreePine, Plus, MapPin, Loader2 } from "lucide-react";
-import { useHyggen, useCreateHygge } from "@/hooks/use-api";
+import { TreePine, Plus, MapPin, Loader2, Trash2, AlertCircle } from "lucide-react";
+import { useHyggen, useCreateHygge, useDeleteHygge } from "@/hooks/use-api";
 import { Layout } from "@/components/layout";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,9 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const { data: hyggen, isLoading } = useHyggen();
   const createMutation = useCreateHygge();
+  const deleteMutation = useDeleteHygge();
   const [isCreating, setIsCreating] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -191,24 +193,68 @@ export default function Home() {
         ) : (
           <div className="space-y-4">
             {hyggen.map((hygge) => (
-              <Link key={hygge.id} href={`/hygge/${hygge.id}`} className="block">
-                <Card className="flex items-center p-5 group">
-                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                    <MapPin className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-display font-bold text-lg leading-tight mb-1">{hygge.namn}</h3>
-                    <p className="text-muted-foreground text-sm flex gap-3">
-                      <span>{hygge.hektar} ha</span>
-                      <span>•</span>
-                      <span>Mål: {hygge.rekommenderadeProvytor} ytor</span>
-                    </p>
-                  </div>
-                  <div className="text-muted-foreground">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  </div>
-                </Card>
-              </Link>
+              <div key={hygge.id}>
+                {deleteConfirm === hygge.id ? (
+                  <Card className="p-4 bg-destructive/10 border-destructive/30">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertCircle className="w-5 h-5 text-destructive" />
+                      <span className="font-semibold text-destructive">Radera "{hygge.namn}"?</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => setDeleteConfirm(null)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        Avbryt
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        className="flex-1"
+                        onClick={() => {
+                          deleteMutation.mutate(hygge.id, {
+                            onSuccess: () => setDeleteConfirm(null),
+                          });
+                        }}
+                        disabled={deleteMutation.isPending}
+                      >
+                        {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Radera"}
+                      </Button>
+                    </div>
+                  </Card>
+                ) : (
+                  <Link href={`/hygge/${hygge.id}`} className="block">
+                    <Card className="flex items-center p-5 group relative">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                        <MapPin className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-display font-bold text-lg leading-tight mb-1">{hygge.namn}</h3>
+                        <p className="text-muted-foreground text-sm flex gap-3">
+                          <span>{hygge.hektar} ha</span>
+                          <span>•</span>
+                          <span>Mål: {hygge.rekommenderadeProvytor} ytor</span>
+                        </p>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="text-destructive hover:bg-destructive/10 ml-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDeleteConfirm(hygge.id);
+                        }}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                      <div className="text-muted-foreground ml-2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                      </div>
+                    </Card>
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         )}

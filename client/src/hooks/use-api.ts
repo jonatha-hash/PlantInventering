@@ -88,6 +88,47 @@ export function useCreateHygge() {
   });
 }
 
+export function useUpdateHygge(id: number) {
+  const queryClient = useQueryClient();
+  const url = buildUrl(api.hyggen.update.path, { id });
+  
+  return useMutation({
+    mutationFn: async (data: Partial<CreateHyggeRequest>) => {
+      const res = await fetch(url, {
+        method: api.hyggen.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update hygge");
+      return api.hyggen.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.get.path, id] });
+    },
+  });
+}
+
+export function useDeleteHygge() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.hyggen.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.hyggen.delete.method,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete hygge");
+      return;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.list.path] });
+    },
+  });
+}
+
 // --- PROVYTOR ---
 
 export function useCreateProvyta(hyggeId: number) {
@@ -105,6 +146,49 @@ export function useCreateProvyta(hyggeId: number) {
       });
       if (!res.ok) throw new Error("Failed to create provyta");
       return api.provytor.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.get.path, hyggeId] });
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.stats.path, hyggeId] });
+    },
+  });
+}
+
+export function useUpdateProvyta(hyggeId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { id: number } & Partial<CreateProvytaRequest>) => {
+      const { id, ...updates } = data;
+      const url = buildUrl(api.provytor.update.path, { id });
+      const res = await fetch(url, {
+        method: api.provytor.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update provyta");
+      return api.provytor.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.get.path, hyggeId] });
+      queryClient.invalidateQueries({ queryKey: [api.hyggen.stats.path, hyggeId] });
+    },
+  });
+}
+
+export function useDeleteProvyta(hyggeId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.provytor.delete.path, { id });
+      const res = await fetch(url, {
+        method: api.provytor.delete.method,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete provyta");
+      return;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.hyggen.get.path, hyggeId] });

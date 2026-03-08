@@ -84,6 +84,24 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/hyggen/:id' as const,
+      input: insertHyggeSchema.partial(),
+      responses: {
+        200: hyggeResponseSchema,
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      }
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/hyggen/:id' as const,
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      }
+    },
     stats: {
       method: 'GET' as const,
       path: '/api/hyggen/:id/stats' as const,
@@ -111,6 +129,14 @@ export const api = {
       responses: {
         200: provytaResponseSchema,
         400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      }
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/provytor/:id' as const,
+      responses: {
+        204: z.void(),
         404: errorSchemas.notFound,
       }
     }
