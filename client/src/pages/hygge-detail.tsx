@@ -11,7 +11,7 @@ import { insertProvytaSchema } from "@shared/schema";
 import { z } from "zod";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useDeleteProvyta, useUpdateProvyta, useHyggeStats, useDeleteHygge } from "@/hooks/use-api";
+import { useDeleteProvyta, useUpdateProvyta, useHyggeStats, useDeleteHygge, useUpdateHygge } from "@/hooks/use-api";
 
 const formSchema = z.object({
   radieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie"),
@@ -30,12 +30,15 @@ export default function HyggeDetail() {
   const createMutation = useCreateProvyta(id);
   const deleteMutation = useDeleteProvyta(id);
   const deleteHyggeMutation = useDeleteHygge();
-  const updateHyggeMutation = useUpdateProvyta(id);
+  const updateProvytaMutation = useUpdateProvyta(id);
+  const updateHyggeMutation = useUpdateHygge(id);
   
   const [isAdding, setIsAdding] = useState(false);
-  const [editingHyggeId, setEditingHyggeId] = useState<number | null>(null);
+  const [editingComment, setEditingComment] = useState(false);
+  const [commentValue, setCommentValue] = useState(hygge?.anteckning || "");
   const [deleteConfirmProvyta, setDeleteConfirmProvyta] = useState<number | null>(null);
   const [editingProvytaId, setEditingProvytaId] = useState<number | null>(null);
+  const [editingProvytaComment, setEditingProvytaComment] = useState<{ id: number; value: string } | null>(null);
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -176,10 +179,45 @@ export default function HyggeDetail() {
           </div>
         </div>
 
-        {hygge.anteckning && (
-          <div className="relative z-10 flex items-start gap-2 text-primary-foreground/90 bg-black/10 p-3 rounded-xl mb-4 text-sm italic">
+        {editingComment ? (
+          <div className="relative z-10 flex items-start gap-2 bg-black/20 p-3 rounded-xl mb-4">
+            <input
+              type="text"
+              value={commentValue}
+              onChange={(e) => setCommentValue(e.target.value)}
+              placeholder="Lägg till anteckning..."
+              className="flex-1 bg-white/10 text-white placeholder-white/50 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-3 text-primary-foreground hover:bg-white/10 text-xs"
+              onClick={() => {
+                updateHyggeMutation.mutate({ anteckning: commentValue || null }, {
+                  onSuccess: () => setEditingComment(false),
+                });
+              }}
+              disabled={updateHyggeMutation.isPending}
+            >
+              {updateHyggeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Spara"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-3 text-primary-foreground hover:bg-white/10 text-xs"
+              onClick={() => {
+                setEditingComment(false);
+                setCommentValue(hygge?.anteckning || "");
+              }}
+            >
+              Avbryt
+            </Button>
+          </div>
+        ) : (
+          <div className="relative z-10 flex items-start gap-2 text-primary-foreground/90 bg-black/10 p-3 rounded-xl mb-4 text-sm italic group cursor-pointer hover:bg-black/20 transition-colors" onClick={() => setEditingComment(true)}>
             <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <p>{hygge.anteckning}</p>
+            <p className="flex-1">{hygge.anteckning || "Klicka för att lägga till anteckning"}</p>
+            <Edit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
           </div>
         )}
 

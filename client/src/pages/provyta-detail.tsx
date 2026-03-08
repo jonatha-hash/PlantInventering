@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
 import { Layout } from "@/components/layout";
-import { useHygge, useCreateTradpost } from "@/hooks/use-api";
+import { useHygge, useCreateTradpost, useUpdateProvyta } from "@/hooks/use-api";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Leaf, AlertCircle, Plus, Loader2 } from "lucide-react";
+import { Leaf, AlertCircle, Plus, Loader2, Edit2 } from "lucide-react";
 import { clsx } from "clsx";
 
 const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok"];
@@ -29,9 +29,13 @@ export default function ProvytaDetail() {
 
   const { data: hygge, isLoading } = useHygge(hyggeId);
   const createMutation = useCreateTradpost(provytaId, hyggeId);
+  const updateProvytaMutation = useUpdateProvyta(hyggeId);
 
   const provyta = hygge?.provytor.find(p => p.id === provytaId);
   const provytaIndex = hygge ? hygge.provytor.findIndex(p => p.id === provytaId) + 1 : 0;
+  
+  const [editingComment, setEditingComment] = useState(false);
+  const [commentValue, setCommentValue] = useState(provyta?.anteckning || "");
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,6 +49,11 @@ export default function ProvytaDetail() {
   if (!provyta) return <Layout backTo={`/hygge/${hyggeId}`}><div className="p-8 text-center text-muted-foreground">Provyta hittades inte</div></Layout>;
 
   const areaM2 = Math.PI * Math.pow(provyta.radieM, 2);
+  
+  // Update comment value when provyta changes
+  if (!editingComment && provyta?.anteckning !== commentValue) {
+    setCommentValue(provyta?.anteckning || "");
+  }
 
   const onSubmit = (data: FormValues) => {
     createMutation.mutate(data, {
@@ -69,6 +78,51 @@ export default function ProvytaDetail() {
           <span className="font-display font-bold text-xl">{areaM2.toFixed(1)} m²</span>
         </div>
       </div>
+
+      {/* Comment Section */}
+      {editingComment ? (
+        <div className="bg-secondary/30 rounded-2xl p-4 mb-6 border border-border/50 flex items-start gap-3">
+          <input
+            type="text"
+            value={commentValue}
+            onChange={(e) => setCommentValue(e.target.value)}
+            placeholder="Lägg till anteckning..."
+            className="flex-1 bg-white dark:bg-slate-950 rounded-lg px-3 py-2 text-sm border border-border focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          <Button
+            size="sm"
+            className="h-10"
+            onClick={() => {
+              updateProvytaMutation.mutate({ id: provytaId, anteckning: commentValue || null }, {
+                onSuccess: () => setEditingComment(false),
+              });
+            }}
+            disabled={updateProvytaMutation.isPending}
+          >
+            {updateProvytaMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Spara"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-10"
+            onClick={() => {
+              setEditingComment(false);
+              setCommentValue(provyta?.anteckning || "");
+            }}
+          >
+            Avbryt
+          </Button>
+        </div>
+      ) : (
+        <div className="bg-secondary/30 rounded-2xl p-4 mb-6 border border-border/50 group cursor-pointer hover:bg-secondary/40 transition-colors" onClick={() => setEditingComment(true)}>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground italic">
+              {commentValue || "Klicka för att lägga till anteckning..."}
+            </p>
+            <Edit2 className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+          </div>
+        </div>
+      )}
 
       {/* Quick Entry Form */}
       <Card className="mb-8 border-2 border-primary/20 shadow-elevated">
