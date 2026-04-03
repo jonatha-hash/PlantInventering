@@ -6,7 +6,7 @@ import { Card, Button, Input, Label } from "@/components/ui-elements";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Leaf, AlertCircle, Plus, Loader2, Edit2 } from "lucide-react";
+import { Leaf, AlertCircle, Plus, Loader2, Edit2, Skull } from "lucide-react";
 import { clsx } from "clsx";
 
 const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok"];
@@ -15,6 +15,7 @@ const formSchema = z.object({
   art: z.string().min(1, "Välj eller skriv art"),
   antal: z.coerce.number().min(1, "Minst 1"),
   skadade: z.coerce.number().min(0, "Kan ej vara negativt"),
+  doda: z.coerce.number().min(0, "Kan ej vara negativt"),
 }).refine(data => data.skadade <= data.antal, {
   message: "Fler skadade än totala antalet",
   path: ["skadade"]
@@ -45,7 +46,7 @@ export default function ProvytaDetail() {
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { art: "", antal: 1, skadade: 0 }
+    defaultValues: { art: "", antal: 1, skadade: 0, doda: 0 }
   });
 
   const selectedArt = watch("art");
@@ -59,8 +60,7 @@ export default function ProvytaDetail() {
   const onSubmit = (data: FormValues) => {
     createMutation.mutate(data, {
       onSuccess: () => {
-        // Reset specific fields for rapid entry, keep species
-        reset({ art: data.art, antal: 1, skadade: 0 });
+        reset({ art: data.art, antal: 1, skadade: 0, doda: 0 });
       }
     });
   };
@@ -156,6 +156,7 @@ export default function ProvytaDetail() {
             {errors.art && <p className="text-destructive text-sm mt-2 font-medium">{errors.art.message}</p>}
           </div>
 
+          {/* Antal + Skadade row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="antal">Antal</Label>
@@ -194,6 +195,34 @@ export default function ProvytaDetail() {
             </div>
           </div>
 
+          {/* Döda plantor — full-width row, visually separate */}
+          <div className="border-t border-border/50 pt-4">
+            <Label htmlFor="doda" className="text-muted-foreground flex items-center gap-1.5">
+              <Skull className="w-3.5 h-3.5" />
+              Döda plantor (räknas separat)
+            </Label>
+            <div className="relative mt-1">
+              <Input
+                id="doda"
+                type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="text-2xl font-bold text-center h-16 pr-12 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
+                {...register("doda")}
+              />
+              <div className="absolute right-2 top-2 bottom-2 flex flex-col gap-1 w-10">
+                <button
+                  type="button"
+                  onClick={() => setValue("doda", Number(watch("doda")) + 1)}
+                  className="flex-1 bg-secondary rounded-md flex items-center justify-center hover:bg-secondary/80 active:bg-muted-foreground active:text-white transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            {errors.doda && <p className="text-destructive text-sm mt-1">{errors.doda.message}</p>}
+          </div>
+
           <Button 
             type="submit" 
             className="w-full h-16 text-lg rounded-2xl mt-2"
@@ -214,23 +243,31 @@ export default function ProvytaDetail() {
       ) : (
         <div className="space-y-3">
           {provyta.tradposter.map((trad) => (
-            <div key={trad.id} className="bg-card border border-border/60 rounded-xl p-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+            <div key={trad.id} className="bg-card border border-border/60 rounded-xl p-4 flex justify-between items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                   <Leaf className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold text-lg leading-none mb-1">{trad.art}</p>
                   <p className="text-sm text-muted-foreground font-medium">{trad.antal} st</p>
                 </div>
               </div>
               
-              {trad.skadade > 0 && (
-                <div className="bg-accent/10 text-accent px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold text-sm">
-                  <AlertCircle className="w-4 h-4" />
-                  {trad.skadade} skadade
-                </div>
-              )}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {trad.skadade > 0 && (
+                  <div className="bg-accent/10 text-accent px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    {trad.skadade} skad.
+                  </div>
+                )}
+                {(trad.doda ?? 0) > 0 && (
+                  <div className="bg-muted text-muted-foreground px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold text-sm">
+                    <Skull className="w-4 h-4" />
+                    {trad.doda} döda
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

@@ -30,6 +30,7 @@ export const tradposter = pgTable("tradposter", {
   art: text("art").notNull(),
   antal: integer("antal").notNull(),
   skadade: integer("skadade").notNull().default(0),
+  doda: integer("doda").notNull().default(0),
 });
 
 // === RELATIONS ===
@@ -86,9 +87,11 @@ export interface SpeciesStats {
   art: string;
   totalAntal: number;
   totalSkadade: number;
+  totalDoda: number;
   medelPerProvyta: number;
   plantorPerHa: number;
   skadadePerHa: number;
+  dodaPerHa: number;
 }
 
 export interface HyggeStatsResponse {
@@ -98,10 +101,12 @@ export interface HyggeStatsResponse {
   genomsnittligProvytaAreaHa: number;
   totalPlantor: number;
   totalSkadade: number;
+  totalDoda: number;
   medelPlantorPerProvyta: number;
   sPlantor: number; // Standard deviation
   ci95Plantor: number; // 95% Confidence Interval half-width
   plantorPerHa: number;
   skadadePerHa: number;
+  dodaPerHa: number;
   arter: SpeciesStats[];
 }

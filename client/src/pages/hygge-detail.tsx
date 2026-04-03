@@ -3,7 +3,7 @@ import { useRoute, Link, useLocation } from "wouter";
 import { Layout } from "@/components/layout";
 import { useHygge, useCreateProvyta } from "@/hooks/use-api";
 import { Card, Button, Input, Label } from "@/components/ui-elements";
-import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin, FileText, Download, Trash2, Edit2, AlertCircle } from "lucide-react";
+import { Copy, Plus, BarChart3, TreePine, AlertTriangle, ChevronRight, Loader2, MapPin, FileText, Download, Trash2, Edit2, AlertCircle, Skull } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,13 +104,14 @@ export default function HyggeDetail() {
     const tableData = hygge.provytor.map((p, i) => {
       const treeCount = p.tradposter.reduce((sum, t) => sum + t.antal, 0);
       const damageCount = p.tradposter.reduce((sum, t) => sum + t.skadade, 0);
+      const deadCount = p.tradposter.reduce((sum, t) => sum + (t.doda ?? 0), 0);
       const species = p.tradposter.map(t => `${t.art}: ${t.antal}st`).join(', ');
-      return [i + 1, `${p.radieM}m`, treeCount, damageCount, species, p.anteckning || '-'];
+      return [i + 1, `${p.radieM}m`, treeCount, damageCount, deadCount, species, p.anteckning || '-'];
     });
     
     autoTable(doc, {
       startY: yPos + 2,
-      head: [['Nr', 'Radie', 'Antal träd', 'Skadade', 'Arter', 'Anteckning']],
+      head: [['Nr', 'Radie', 'Antal träd', 'Skadade', 'Döda', 'Arter', 'Anteckning']],
       body: tableData,
     });
     
@@ -125,6 +126,7 @@ export default function HyggeDetail() {
     const statsData = [
       ['Plantor/ha', Math.round(stats.plantorPerHa).toString()],
       ['Skadade/ha', Math.round(stats.skadadePerHa).toString()],
+      ['Döda plantor/ha', Math.round(stats.dodaPerHa).toString()],
       ['Medel plantor/provyta', stats.medelPlantorPerProvyta.toFixed(1)],
       ['Standardavvikelse', stats.sPlantor.toFixed(2)],
       ['95% Konfidensintervall', `±${Math.round(stats.ci95Plantor)}`],
@@ -334,6 +336,7 @@ export default function HyggeDetail() {
             const actualIndex = provytorCount - idx;
             const treeCount = yta.tradposter.reduce((sum, t) => sum + t.antal, 0);
             const damageCount = yta.tradposter.reduce((sum, t) => sum + t.skadade, 0);
+            const deadCount = yta.tradposter.reduce((sum, t) => sum + (t.doda ?? 0), 0);
             
             return (
               <div key={yta.id}>
@@ -390,12 +393,20 @@ export default function HyggeDetail() {
                         {yta.anteckning && (
                           <p className="text-xs text-muted-foreground italic mt-1">{yta.anteckning}</p>
                         )}
-                        {damageCount > 0 && (
-                          <div className="flex items-center text-xs text-accent font-medium mt-1">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            {damageCount} skadade
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 mt-1">
+                          {damageCount > 0 && (
+                            <div className="flex items-center text-xs text-accent font-medium">
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              {damageCount} skadade
+                            </div>
+                          )}
+                          {deadCount > 0 && (
+                            <div className="flex items-center text-xs text-muted-foreground font-medium">
+                              <Skull className="w-3 h-3 mr-1" />
+                              {deadCount} döda
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
                       <Button

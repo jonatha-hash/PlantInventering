@@ -41,18 +41,22 @@ const statsResponseSchema = z.object({
   genomsnittligProvytaAreaHa: z.number(),
   totalPlantor: z.number(),
   totalSkadade: z.number(),
+  totalDoda: z.number(),
   medelPlantorPerProvyta: z.number(),
   sPlantor: z.number(),
   ci95Plantor: z.number(),
   plantorPerHa: z.number(),
   skadadePerHa: z.number(),
+  dodaPerHa: z.number(),
   arter: z.array(z.object({
     art: z.string(),
     totalAntal: z.number(),
     totalSkadade: z.number(),
+    totalDoda: z.number(),
     medelPerProvyta: z.number(),
     plantorPerHa: z.number(),
-    skadadePerHa: z.number()
+    skadadePerHa: z.number(),
+    dodaPerHa: z.number()
   }))
 });
 

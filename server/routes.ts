@@ -109,11 +109,13 @@ export async function registerRoutes(
         genomsnittligProvytaAreaHa: 0,
         totalPlantor: 0,
         totalSkadade: 0,
+        totalDoda: 0,
         medelPlantorPerProvyta: 0,
         sPlantor: 0,
         ci95Plantor: 0,
         plantorPerHa: 0,
         skadadePerHa: 0,
+        dodaPerHa: 0,
         arter: []
       });
     }
@@ -122,10 +124,11 @@ export async function registerRoutes(
     let sumAreaM2 = 0;
     let totalPlantor = 0;
     let totalSkadade = 0;
+    let totalDoda = 0;
     const plantorPerProvyta: number[] = [];
 
     // Track per-species stats
-    const artsStats: Record<string, { antal: number, skadade: number, provytaCounts: number[] }> = {};
+    const artsStats: Record<string, { antal: number, skadade: number, doda: number, provytaCounts: number[] }> = {};
 
     hygge.provytor.forEach((provyta, i) => {
       const areaM2 = Math.PI * Math.pow(provyta.radieM, 2);
@@ -133,27 +136,32 @@ export async function registerRoutes(
 
       let plotPlantor = 0;
       let plotSkadade = 0;
+      let plotDoda = 0;
 
       provyta.tradposter.forEach(t => {
         plotPlantor += t.antal;
         plotSkadade += t.skadade;
+        plotDoda += (t.doda ?? 0);
 
         if (!artsStats[t.art]) {
-          artsStats[t.art] = { antal: 0, skadade: 0, provytaCounts: new Array(n).fill(0) };
+          artsStats[t.art] = { antal: 0, skadade: 0, doda: 0, provytaCounts: new Array(n).fill(0) };
         }
         artsStats[t.art].antal += t.antal;
         artsStats[t.art].skadade += t.skadade;
+        artsStats[t.art].doda += (t.doda ?? 0);
         artsStats[t.art].provytaCounts[i] += t.antal;
       });
 
       plantorPerProvyta.push(plotPlantor);
       totalPlantor += plotPlantor;
       totalSkadade += plotSkadade;
+      totalDoda += plotDoda;
     });
 
     const genomsnittligProvytaAreaHa = (sumAreaM2 / n) / 10000;
     const medelPlantorPerProvyta = jStat.mean(plantorPerProvyta);
-    const sPlantor = jStat.stdev(plantorPerProvyta, true); // sample standard deviation
+    const sPlantorRaw = n > 1 ? jStat.stdev(plantorPerProvyta, true) : 0;
+    const sPlantor = isFinite(sPlantorRaw) && sPlantorRaw !== null ? sPlantorRaw : 0;
 
     // 95% CI (two-tailed t-distribution)
     let ci95Plantor = 0;
@@ -164,6 +172,7 @@ export async function registerRoutes(
 
     const plantorPerHa = genomsnittligProvytaAreaHa > 0 ? medelPlantorPerProvyta / genomsnittligProvytaAreaHa : 0;
     const skadadePerHa = genomsnittligProvytaAreaHa > 0 ? (totalSkadade / n) / genomsnittligProvytaAreaHa : 0;
+    const dodaPerHa = genomsnittligProvytaAreaHa > 0 ? (totalDoda / n) / genomsnittligProvytaAreaHa : 0;
 
     const arterStats = Object.keys(artsStats).map(art => {
       const stats = artsStats[art];
@@ -172,9 +181,11 @@ export async function registerRoutes(
         art,
         totalAntal: stats.antal,
         totalSkadade: stats.skadade,
+        totalDoda: stats.doda,
         medelPerProvyta: medelPerP,
         plantorPerHa: genomsnittligProvytaAreaHa > 0 ? medelPerP / genomsnittligProvytaAreaHa : 0,
         skadadePerHa: genomsnittligProvytaAreaHa > 0 ? (stats.skadade / n) / genomsnittligProvytaAreaHa : 0,
+        dodaPerHa: genomsnittligProvytaAreaHa > 0 ? (stats.doda / n) / genomsnittligProvytaAreaHa : 0,
       };
     });
 
@@ -185,11 +196,13 @@ export async function registerRoutes(
       genomsnittligProvytaAreaHa,
       totalPlantor,
       totalSkadade,
+      totalDoda,
       medelPlantorPerProvyta,
       sPlantor,
       ci95Plantor,
       plantorPerHa,
       skadadePerHa,
+      dodaPerHa,
       arter: arterStats
     });
   });
