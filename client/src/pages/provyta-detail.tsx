@@ -6,7 +6,7 @@ import { Card, Button, Input, Label } from "@/components/ui-elements";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Leaf, AlertCircle, Plus, Loader2, Edit2, Skull } from "lucide-react";
+import { Leaf, AlertCircle, Loader2, Edit2, Skull } from "lucide-react";
 import { clsx } from "clsx";
 
 const TRAD_ARTER = ["Tall", "Gran", "Björk", "Ek", "Fågelbär", "Asp", "Al", "Lärk", "Bok"];
@@ -156,71 +156,98 @@ export default function ProvytaDetail() {
             {errors.art && <p className="text-destructive text-sm mt-2 font-medium">{errors.art.message}</p>}
           </div>
 
-          {/* Antal + Skadade row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="antal">Antal</Label>
-              <div className="relative">
-                <Input 
-                  id="antal" 
-                  type="number" 
-                  inputMode="numeric" 
-                  pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-16 pr-12"
-                  {...register("antal")} 
-                />
-                <div className="absolute right-2 top-2 bottom-2 flex flex-col gap-1 w-10">
-                  <button type="button" onClick={() => setValue("antal", antal + 1)} className="flex-1 bg-secondary rounded-md flex items-center justify-center hover:bg-secondary/80 active:bg-primary active:text-white transition-colors"><Plus className="w-4 h-4"/></button>
-                </div>
-              </div>
-              {errors.antal && <p className="text-destructive text-sm mt-1">{errors.antal.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="skadade" className="text-accent">Därav skadade</Label>
-              <div className="relative">
-                <Input 
-                  id="skadade" 
-                  type="number" 
-                  inputMode="numeric" 
-                  pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-16 pr-12 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
-                  {...register("skadade")} 
-                />
-                <div className="absolute right-2 top-2 bottom-2 flex flex-col gap-1 w-10">
-                  <button type="button" onClick={() => setValue("skadade", Math.min(Number(watch("skadade")) + 1, Number(watch("antal"))))} className="flex-1 bg-secondary rounded-md flex items-center justify-center hover:bg-secondary/80 active:bg-accent active:text-white transition-colors"><Plus className="w-4 h-4"/></button>
-                </div>
-              </div>
-              {errors.skadade && <p className="text-destructive text-sm mt-1">{errors.skadade.message}</p>}
-            </div>
-          </div>
-
-          {/* Döda plantor — full-width row, visually separate */}
-          <div className="border-t border-border/50 pt-4">
-            <Label htmlFor="doda" className="text-muted-foreground flex items-center gap-1.5">
-              <Skull className="w-3.5 h-3.5" />
-              Döda plantor (räknas separat)
-            </Label>
-            <div className="relative mt-1">
+          {/* Antal — full width with large +/- buttons */}
+          <div>
+            <Label htmlFor="antal">Antal</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => setValue("antal", Math.max(1, antal - 1))}
+                className="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+              >
+                −
+              </button>
               <Input
-                id="doda"
+                id="antal"
                 type="number"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="text-2xl font-bold text-center h-16 pr-12 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
-                {...register("doda")}
+                className="text-3xl font-bold text-center h-16 flex-1 min-w-0"
+                {...register("antal")}
               />
-              <div className="absolute right-2 top-2 bottom-2 flex flex-col gap-1 w-10">
+              <button
+                type="button"
+                onClick={() => setValue("antal", antal + 1)}
+                className="w-16 h-16 bg-primary text-primary-foreground rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-primary/90 active:scale-95 transition-all flex-shrink-0 select-none"
+              >
+                +
+              </button>
+            </div>
+            {errors.antal && <p className="text-destructive text-sm mt-1">{errors.antal.message}</p>}
+          </div>
+
+          {/* Skadade + Döda — side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="skadade" className="text-accent">Skadade</Label>
+              <div className="flex items-center gap-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setValue("skadade", Math.max(0, Number(watch("skadade")) - 1))}
+                  className="w-12 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+                >
+                  −
+                </button>
+                <Input
+                  id="skadade"
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="text-2xl font-bold text-center h-14 flex-1 min-w-0 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
+                  {...register("skadade")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setValue("skadade", Math.min(Number(watch("skadade")) + 1, antal))}
+                  className="w-12 h-14 bg-accent text-accent-foreground rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-accent/90 active:scale-95 transition-all flex-shrink-0 select-none"
+                >
+                  +
+                </button>
+              </div>
+              {errors.skadade && <p className="text-destructive text-xs mt-1">{errors.skadade.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="doda" className="text-muted-foreground flex items-center gap-1">
+                <Skull className="w-3.5 h-3.5" />
+                Döda
+              </Label>
+              <div className="flex items-center gap-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setValue("doda", Math.max(0, Number(watch("doda")) - 1))}
+                  className="w-12 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+                >
+                  −
+                </button>
+                <Input
+                  id="doda"
+                  type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="text-2xl font-bold text-center h-14 flex-1 min-w-0 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
+                  {...register("doda")}
+                />
                 <button
                   type="button"
                   onClick={() => setValue("doda", Number(watch("doda")) + 1)}
-                  className="flex-1 bg-secondary rounded-md flex items-center justify-center hover:bg-secondary/80 active:bg-muted-foreground active:text-white transition-colors"
+                  className="w-12 h-14 bg-muted-foreground text-background rounded-xl flex items-center justify-center text-2xl font-bold hover:opacity-80 active:scale-95 transition-all flex-shrink-0 select-none"
                 >
-                  <Plus className="w-4 h-4" />
+                  +
                 </button>
               </div>
+              {errors.doda && <p className="text-destructive text-xs mt-1">{errors.doda.message}</p>}
             </div>
-            {errors.doda && <p className="text-destructive text-sm mt-1">{errors.doda.message}</p>}
           </div>
 
           <Button 
