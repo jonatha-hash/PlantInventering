@@ -338,12 +338,12 @@ async function seedDatabase() {
 
       // Create a couple of provytor
       const p1 = await storage.createProvyta(hygge.id, {
-        radieM: 1.78, // ~10m2
+        radieM: 2.83,
         anteckning: "Bra markberedning"
       });
 
       const p2 = await storage.createProvyta(hygge.id, {
-        radieM: 1.78, // ~10m2
+        radieM: 2.83,
         anteckning: "Stenigt"
       });
 

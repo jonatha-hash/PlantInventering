@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const formSchema = insertHyggeSchema.extend({
   hektar: z.coerce.number().min(0.1, "Måste vara minst 0.1 ha"),
   rekommenderadeProvytor: z.coerce.number().min(1, "Minst 1 provyta"),
-  initialRadieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie").optional().default(1.78),
+  initialRadieM: z.coerce.number().min(0.5, "Radie krävs").max(20, "Orimlig radie").optional().default(2.83),
   anteckning: z.string().optional(),
 });
 
@@ -30,11 +30,11 @@ export default function Home() {
 
   const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 1.78, anteckning: "" }
+    defaultValues: { namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 2.83, anteckning: "" }
   });
 
   const hektar = watch("hektar");
-  const radieM = watch("initialRadieM") || 1.78;
+  const radieM = watch("initialRadieM") || 2.83;
 
   // Automatically suggest plots based on hectares and radius
   const calculateRecommended = (ha: number, radie: number) => {
@@ -49,7 +49,7 @@ export default function Home() {
     createMutation.mutate(data, {
       onSuccess: (newHygge) => {
         setIsCreating(false);
-        reset({ namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 1.78, anteckning: "" });
+        reset({ namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 2.83, anteckning: "" });
         setLocation(`/hygge/${newHygge.id}`);
       },
       onError: (error) => {
