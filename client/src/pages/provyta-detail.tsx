@@ -172,7 +172,7 @@ export default function ProvytaDetail() {
                 type="number"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="text-3xl font-bold text-center h-16 w-16 flex-shrink-0"
+                className="text-3xl font-bold text-center h-16 w-20 flex-shrink-0"
                 {...register("antal")}
               />
               <button
@@ -203,7 +203,7 @@ export default function ProvytaDetail() {
                   type="number"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-14 w-12 flex-shrink-0 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
+                  className="text-2xl font-bold text-center h-14 w-20 flex-shrink-0 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
                   {...register("skadade")}
                 />
                 <button
@@ -235,7 +235,7 @@ export default function ProvytaDetail() {
                   type="number"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-14 w-12 flex-shrink-0 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
+                  className="text-2xl font-bold text-center h-14 w-20 flex-shrink-0 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
                   {...register("doda")}
                 />
                 <button
