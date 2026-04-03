@@ -156,14 +156,14 @@ export default function ProvytaDetail() {
             {errors.art && <p className="text-destructive text-sm mt-2 font-medium">{errors.art.message}</p>}
           </div>
 
-          {/* Antal — full width with large +/- buttons */}
+          {/* Antal — full width, buttons grow, input fixed small */}
           <div>
             <Label htmlFor="antal">Antal</Label>
             <div className="flex items-center gap-2 mt-1">
               <button
                 type="button"
                 onClick={() => setValue("antal", Math.max(1, antal - 1))}
-                className="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+                className="flex-1 h-16 bg-secondary rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-secondary/80 active:scale-95 transition-all select-none"
               >
                 −
               </button>
@@ -172,13 +172,13 @@ export default function ProvytaDetail() {
                 type="number"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="text-3xl font-bold text-center h-16 flex-1 min-w-0"
+                className="text-3xl font-bold text-center h-16 w-16 flex-shrink-0"
                 {...register("antal")}
               />
               <button
                 type="button"
                 onClick={() => setValue("antal", antal + 1)}
-                className="w-16 h-16 bg-primary text-primary-foreground rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-primary/90 active:scale-95 transition-all flex-shrink-0 select-none"
+                className="flex-1 h-16 bg-primary text-primary-foreground rounded-xl flex items-center justify-center text-3xl font-bold hover:bg-primary/90 active:scale-95 transition-all select-none"
               >
                 +
               </button>
@@ -186,7 +186,7 @@ export default function ProvytaDetail() {
             {errors.antal && <p className="text-destructive text-sm mt-1">{errors.antal.message}</p>}
           </div>
 
-          {/* Skadade + Döda — side by side */}
+          {/* Skadade + Döda — side by side, buttons grow, input fixed small */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="skadade" className="text-accent">Skadade</Label>
@@ -194,7 +194,7 @@ export default function ProvytaDetail() {
                 <button
                   type="button"
                   onClick={() => setValue("skadade", Math.max(0, Number(watch("skadade")) - 1))}
-                  className="w-12 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+                  className="flex-1 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all select-none"
                 >
                   −
                 </button>
@@ -203,13 +203,13 @@ export default function ProvytaDetail() {
                   type="number"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-14 flex-1 min-w-0 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
+                  className="text-2xl font-bold text-center h-14 w-12 flex-shrink-0 border-accent/30 focus-visible:border-accent focus-visible:ring-accent/20"
                   {...register("skadade")}
                 />
                 <button
                   type="button"
                   onClick={() => setValue("skadade", Math.min(Number(watch("skadade")) + 1, antal))}
-                  className="w-12 h-14 bg-accent text-accent-foreground rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-accent/90 active:scale-95 transition-all flex-shrink-0 select-none"
+                  className="flex-1 h-14 bg-accent text-accent-foreground rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-accent/90 active:scale-95 transition-all select-none"
                 >
                   +
                 </button>
@@ -226,7 +226,7 @@ export default function ProvytaDetail() {
                 <button
                   type="button"
                   onClick={() => setValue("doda", Math.max(0, Number(watch("doda")) - 1))}
-                  className="w-12 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all flex-shrink-0 select-none"
+                  className="flex-1 h-14 bg-secondary rounded-xl flex items-center justify-center text-2xl font-bold hover:bg-secondary/80 active:scale-95 transition-all select-none"
                 >
                   −
                 </button>
@@ -235,13 +235,13 @@ export default function ProvytaDetail() {
                   type="number"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  className="text-2xl font-bold text-center h-14 flex-1 min-w-0 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
+                  className="text-2xl font-bold text-center h-14 w-12 flex-shrink-0 border-muted-foreground/30 focus-visible:border-muted-foreground focus-visible:ring-muted-foreground/20"
                   {...register("doda")}
                 />
                 <button
                   type="button"
                   onClick={() => setValue("doda", Number(watch("doda")) + 1)}
-                  className="w-12 h-14 bg-muted-foreground text-background rounded-xl flex items-center justify-center text-2xl font-bold hover:opacity-80 active:scale-95 transition-all flex-shrink-0 select-none"
+                  className="flex-1 h-14 bg-muted-foreground text-background rounded-xl flex items-center justify-center text-2xl font-bold hover:opacity-80 active:scale-95 transition-all select-none"
                 >
                   +
                 </button>
