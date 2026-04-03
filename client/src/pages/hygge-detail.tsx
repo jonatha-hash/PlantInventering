@@ -42,7 +42,7 @@ export default function HyggeDetail() {
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { radieM: 2.83 }
+    defaultValues: { radieM: 3.99 }
   });
 
   if (isLoading) {
