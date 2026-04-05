@@ -28,21 +28,14 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { namn: "", hektar: 0, rekommenderadeProvytor: 0, initialRadieM: 3.99, anteckning: "" }
   });
 
-  const hektar = watch("hektar");
-  const radieM = watch("initialRadieM") || 3.99;
-
-  // Automatically suggest plots based on hectares and radius
-  const calculateRecommended = (ha: number, radie: number) => {
-    if (!ha || !radie) return 5;
-    // Standard formula for forestry: target is often a certain percentage or fixed count per ha
-    // We'll use a slightly more dynamic formula here
-    const plotsPerHa = Math.max(5, Math.ceil(ha * (10 / radie)));
-    return plotsPerHa;
+  const calculateRecommended = (ha: number) => {
+    if (!ha || ha <= 0) return 0;
+    return Math.round(5 * Math.sqrt(ha));
   };
 
   const onSubmit = (data: FormValues) => {
@@ -105,8 +98,8 @@ export default function Home() {
                         onChange={(e) => {
                           register("hektar").onChange(e);
                           const val = parseFloat(e.target.value);
-                          if (!isNaN(val)) {
-                            reset(v => ({...v, rekommenderadeProvytor: calculateRecommended(val)}));
+                          if (!isNaN(val) && val > 0) {
+                            setValue("rekommenderadeProvytor", calculateRecommended(val));
                           }
                         }}
                       />
@@ -133,13 +126,6 @@ export default function Home() {
                         step="0.01" 
                         inputMode="decimal"
                         {...register("initialRadieM")}
-                        onChange={(e) => {
-                          register("initialRadieM").onChange(e);
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val) && val > 0) {
-                            setValue("rekommenderadeProvytor", calculateRecommended(hektar, val));
-                          }
-                        }}
                       />
                     </div>
                     <div>
