@@ -124,7 +124,7 @@ export default function HyggeDetail() {
     
     doc.setFontSize(10);
     const statsData = [
-      ['Plantor/ha', Math.round(stats.plantorPerHa).toString()],
+      ['Plantor/ha (exkl. döda)', Math.round(stats.plantorPerHa).toString()],
       ['Skadade/ha', Math.round(stats.skadadePerHa).toString()],
       ['Döda plantor/ha', Math.round(stats.dodaPerHa).toString()],
       ['Medel plantor/provyta', stats.medelPlantorPerProvyta.toFixed(1)],
@@ -147,7 +147,7 @@ export default function HyggeDetail() {
       
       const speciesData = stats.arter.map(art => [
         art.art,
-        art.totalAntal.toString(),
+        Math.round(art.plantorPerHa * hygge.hektar).toString(),
         Math.round(art.plantorPerHa).toString(),
         art.medelPerProvyta.toFixed(1)
       ]);
