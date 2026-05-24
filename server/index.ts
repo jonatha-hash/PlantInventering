@@ -7,15 +7,13 @@ import cors from "cors";
 const app = express();
 const httpServer = createServer(app);
 
-import cors from "cors";
+app.use(cors());
 
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
   }
 }
-
-app.use(cors());
 
 app.use(
   express.json({
@@ -99,4 +97,3 @@ app.use((req, res, next) => {
     },
   );
 })();
-
