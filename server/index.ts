@@ -7,6 +7,8 @@ import cors from "cors";
 const app = express();
 const httpServer = createServer(app);
 
+import cors from "cors";
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
